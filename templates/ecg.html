@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>💓 ECG Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #00fff7;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    h2 {
+      color: #00e5ff;
+      text-shadow: 0 0 10px #00e5ff, 0 0 20px #00bcd4;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .card {
+      background: #111;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+      max-width: 95%; /* ✅ Canvas wrapper full width */
+      margin: 0 auto; /* ✅ Center horizontally */
+    }
+
+    canvas {
+      background: black;
+      border-radius: 10px;
+      padding: 10px;
+      border: 2px solid #00e5ff;
+      box-shadow: 0 0 20px #00e5ff, inset 0 0 10px #004d66;
+      width: 100% !important;  /* ✅ Full width */
+      height: 500px !important; /* Bigger canvas */
+      display: block;
+      margin: auto; /* ✅ Center canvas */
+    }
+
+    /* ✅ Fixed status bar at bottom */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #111;
+      color: #00ffcc;
+      padding: 10px 15px;
+      border-top: 2px solid #00e5ff;
+      box-shadow: 0px -2px 20px rgba(0, 255, 255, 0.4);
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      z-index: 1000;
+      font-size: 1rem;
+      text-shadow: 0 0 5px #00e5ff;
+    }
+
+    .analog { color: #ff4d4d; margin-left: 15px; text-shadow: 0 0 5px red; }
+    .voltage { color: #4da6ff; margin-left: 15px; text-shadow: 0 0 5px #3399ff; }
+
+    /* ✅ Content padding so chart isn’t hidden by status bar */
+    .content { padding-bottom: 100px; }
+
+    /* ✅ Back button neon red style */
+    .back-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: #ff3333;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      text-shadow: 0 0 5px #000;
+      box-shadow: 0 0 15px #ff3333, 0 0 30px #ff0000;
+    }
+    .back-btn:hover {
+      background: #cc0000;
+      box-shadow: 0 0 25px #ff4d4d, 0 0 50px #ff0000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Back Button -->
+  <button class="back-btn" onclick="window.location.href='/menu'">⬅ Back</button>
+
+  <div class="container-fluid py-3 content">
+    <h2>💓 ECG Monitoring Dashboard</h2>
+
+    <!-- Chart -->
+    <div class="card p-3">
+      <canvas id="ecgChart"></canvas>
+    </div>
+
+    <!-- Controls -->
+    <div class="d-flex justify-content-center mt-3">
+      <div>
+        <label class="form-label">Grid Density:</label>
+        <select id="gridSelect" class="form-select form-select-sm" style="width:150px; display:inline-block;">
+          <option value="5">5 mm</option>
+          <option value="10">10 mm</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Status bar -->
+  <div class="status-bar">
+    <span id="statusText">✅ System Ready</span>
+    <span>
+      <span id="analog" class="analog">Analog: ---</span>
+      <span id="voltage" class="voltage">Voltage: --- mV</span>
+    </span>
+  </div>
+
+<script>
+const ctx = document.getElementById('ecgChart').getContext('2d');
+const ecgChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'ECG Voltage (mV)',
+      data: [],
+      borderColor: '#00ffcc',
+      borderWidth: 2,
+      tension: 0.25,
+      pointRadius: 0,
+      shadowColor: "#00e5ff"
+    }]
+  },
+  options: {
+    animation: false,
+    responsive: true,
+    plugins: { legend: { labels: { color: '#00e5ff' } } },
+    scales: {
+      x: { ticks: { color: '#00e5ff' }, grid: { color: "#004d66" } },
+      y: { ticks: { color: '#00e5ff' }, grid: { color: "#004d66" } }
+    }
+  }
+});
+
+// Fetch ECG data
+async function fetchData() {
+  try {
+    const res = await fetch("/api/ecg-data");
+    const data = await res.json();
+
+    // Update status
+    document.getElementById("statusText").innerText = data.status;
+    document.getElementById("analog").innerText = "Analog: " + data.analog;
+    document.getElementById("voltage").innerText = "Voltage: " + data.voltage + " mV";
+
+    // Update chart
+    ecgChart.data.labels.push(data.timestamp);
+    ecgChart.data.datasets[0].data.push(data.voltage);
+
+    if (ecgChart.data.labels.length > 500) {
+      ecgChart.data.labels.shift();
+      ecgChart.data.datasets[0].data.shift();
+    }
+    ecgChart.update("none");
+  } catch (err) {
+    console.error("Error fetching ECG data:", err);
+  }
+}
+
+// Fetch ECG every 50ms (~20fps)
+setInterval(fetchData, 50);
+
+// Handle grid density toggle
+document.getElementById("gridSelect").addEventListener("change", e => {
+  let density = parseInt(e.target.value);
+  if (density === 5) {
+    ecgChart.options.scales.x.ticks.stepSize = 20;
+    ecgChart.options.scales.y.ticks.stepSize = 0.5;
+  } else {
+    ecgChart.options.scales.x.ticks.stepSize = 40;
+    ecgChart.options.scales.y.ticks.stepSize = 1.0;
+  }
+  ecgChart.update();
+});
+</script>
+</body>
+</html>

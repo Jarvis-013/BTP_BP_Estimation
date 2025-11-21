@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>BP Prediction</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #000);
+      color: #e0f2fe;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #00d9ff;
+      text-shadow: 0 0 10px #00d9ff, 0 0 20px #00aaff;
+      margin-top: 20px;
+    }
+
+    #bp {
+      font-size: 22px;
+      margin-top: 20px;
+      text-shadow: 0 0 5px #00d9ff;
+    }
+
+    .bp-container {
+      background: #0d1117;
+      padding: 20px;
+      border-radius: 20px;
+      margin-top: 30px;
+      box-shadow: 0 0 25px rgba(0, 195, 255, 0.4);
+      text-align: center;
+      max-width: 1000px;
+      width: 90%;
+    }
+
+    canvas {
+      background: #111827;
+      border: 2px solid #00c3ff;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 195, 255, 0.4);
+      margin-top: 20px;
+      padding: 10px;
+      width: 100% !important;
+      height: 400px !important;
+    }
+
+    button {
+      padding: 12px 25px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 20px;
+      background: #00c3ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(0, 195, 255, 0.6);
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #00aaff;
+      box-shadow: 0 0 20px #00c3ff, 0 0 30px #66e0ff;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin: 20px auto 0 20px;
+      padding: 12px 25px;
+      background: #ff4444;
+      color: white;
+      font-weight: bold;
+      border-radius: 20px;
+      text-decoration: none;
+      transition: 0.3s;
+      box-shadow: 0 0 12px rgba(255, 68, 68, 0.6);
+    }
+
+    .back-btn:hover {
+      background: #ff2222;
+      box-shadow: 0 0 20px #ff4444, 0 0 30px #ff6666;
+    }
+  </style>
+</head>
+
+<body>
+
+  <a href="/menu" class="back-btn">⬅ Back</a>
+
+  <div class="bp-container">
+    <h1>🩸 Blood Pressure Prediction</h1>
+    <p id="bp">SBP: -- | DBP: --</p>
+    <canvas id="ppgChart"></canvas>
+    <canvas id="ecgChart"></canvas>
+    <button onclick="sendData()">Predict</button>
+    <button id="pauseBtn" onclick="togglePause()">Pause</button>
+  </div>
+
+  <script>
+    const commonOptions = {
+      responsive: true,
+      animation: false,
+      plugins: { legend: { labels: { color: "#e0f2fe" } } },
+      scales: {
+        x: {
+          ticks: { color: "white" },
+          grid: { color: "rgba(255,255,255,0.1)" },
+          type: 'linear',
+          realtime: { delay: 2000 }
+        },
+        y: { ticks: { color: "white" }, grid: { color: "rgba(255,255,255,0.1)" } }
+      }
+    };
+
+    let ppgChart = new Chart(document.getElementById("ppgChart"), {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Filtered PPG",
+          data: [],
+          borderColor: "#1abc9c",
+          fill: false,
+          tension: 0.3,
+          pointRadius: 0
+        }]
+      },
+      options: commonOptions
+    });
+
+    let ecgChart = new Chart(document.getElementById("ecgChart"), {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "ECG",
+          data: [],
+          borderColor: "#ff6666",
+          fill: false,
+          tension: 0.3,
+          pointRadius: 0
+        }]
+      },
+      options: commonOptions
+    });
+
+    let isPredicting = false;
+    let isPaused = false;
+    let dataBuffer = [];
+    let timeStep = 0;
+    let lastPredictionTime = 0;
+    const BUFFER_SIZE = 500;
+    const PREDICTION_INTERVAL = 1000; // Predict every 1 second
+
+    function sendData() {
+      if (isPredicting) return;
+      isPredicting = true;
+      document.getElementById("bp").innerText = "SBP: -- | DBP: -- (Buffering...)";
+
+      // Start continuous loop
+      setInterval(loop, 40); // ~25Hz
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      document.getElementById("pauseBtn").innerText = isPaused ? "Resume" : "Pause";
+    }
+
+    function loop() {
+      if (isPaused) return;
+
+      // Generate synthetic data point
+      timeStep += 0.04;
+
+      // PPG Simulation
+      let ppgPhase = (timeStep * 1.2) % 1.0;
+      let ppgBase = Math.exp(-5 * ppgPhase) * Math.sin(2 * Math.PI * ppgPhase);
+      let ppgVal = 0.5 + 0.2 * ppgBase + (Math.random() - 0.5) * 0.05;
+
+      // ECG Simulation
+      let ecgPhase = (timeStep * 1.2) % 1.0;
+      let ecgVal = 0;
+      if (0.0 < ecgPhase && ecgPhase < 0.1) ecgVal = 0.1 * Math.sin(ecgPhase * 10 * Math.PI);
+      else if (0.15 < ecgPhase && ecgPhase < 0.2) ecgVal = -0.2;
+      else if (0.2 < ecgPhase && ecgPhase < 0.25) ecgVal = 1.5;
+      else if (0.25 < ecgPhase && ecgPhase < 0.3) ecgVal = -0.4;
+      else if (0.4 < ecgPhase && ecgPhase < 0.6) ecgVal = 0.2 * Math.sin((ecgPhase - 0.4) * 5 * Math.PI);
+      ecgVal += (Math.random() - 0.5) * 0.1;
+
+      // Update Buffers
+      dataBuffer.push(ppgVal);
+      if (dataBuffer.length > BUFFER_SIZE) {
+        dataBuffer.shift();
+      }
+
+      // Update Charts
+      updateChart(ppgChart, ppgVal);
+      updateChart(ecgChart, ecgVal);
+
+      // Trigger Prediction
+      if (dataBuffer.length === BUFFER_SIZE) {
+        const now = Date.now();
+        if (now - lastPredictionTime > PREDICTION_INTERVAL) {
+          predictBP();
+          lastPredictionTime = now;
+        }
+      }
+    }
+
+    function updateChart(chart, val) {
+      const labels = chart.data.labels;
+      const data = chart.data.datasets[0].data;
+
+      labels.push(timeStep.toFixed(2));
+      data.push(val);
+
+      if (labels.length > 200) { // Keep chart window manageable
+        labels.shift();
+        data.shift();
+      }
+      chart.update('none'); // 'none' mode for performance
+    }
+
+    async function predictBP() {
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ppg: dataBuffer, fs: 25 })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          console.error("Prediction error:", data.error);
+          return;
+        }
+
+        document.getElementById("bp").innerText = `SBP: ${data.sbp} | DBP: ${data.dbp}`;
+
+      } catch (error) {
+        console.error("Network error:", error);
+      }
+    }
+  </script>
+</body>
+
+</html>

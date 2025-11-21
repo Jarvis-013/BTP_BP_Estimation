@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Heart Rate Monitor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      background: #050d1a;
+      color: #00f0ff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #00f0ff;
+      text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+      margin-bottom: 10px;
+    }
+
+    #status {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    #gauge {
+      font-size: 60px;
+      font-weight: bold;
+      color: #ff0033; /* Neon red for heart rate */
+      text-shadow: 0 0 15px #ff0033, 0 0 30px #ff1a40;
+      margin: 10px 0;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      margin: 20px;
+      gap: 20px;
+    }
+
+    .stat-box {
+      padding: 15px 20px;
+      background: #0a1628;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+      font-size: 18px;
+      color: #ffffff;
+    }
+
+ canvas {
+    width: 100% !important;
+    height: 500px !important;   /* Increased height */
+    max-width: 1200px;          /* Wider max width */
+    margin: 20px auto;
+    background: #0a1628;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+  }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #ff0033;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 0 15px #ff0033, 0 0 30px #ff1a40;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #b30024;
+      box-shadow: 0 0 25px #ff1a40, 0 0 50px #ff0033;
+    }
+
+    .back-btn {
+  display: inline-block;
+  margin: 15px;
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #fff;
+  background: #ff0033;
+  border: 2px solid #ff0033;
+  border-radius: 8px;
+  box-shadow: 0 0 15px #ff0033, 0 0 30px #ff1a40;
+  transition: 0.3s;
+}
+.back-btn:hover {
+  background: #b30024;
+  border-color: #ff1a40;
+  box-shadow: 0 0 25px #ff1a40, 0 0 50px #ff0033;
+}
+
+  </style>
+</head>
+<body>
+<a href="/menu" class="back-btn">⬅ Back</a>
+
+  <h1>❤️ Heart Rate Monitor</h1>
+  <div id="status">Place finger on sensor</div>
+  <div id="gauge">--</div>
+
+  <div class="stats">
+    <div class="stat-box">Min: <span id="min">--</span> BPM</div>
+    <div class="stat-box">Max: <span id="max">--</span> BPM</div>
+    <div class="stat-box">Avg: <span id="avg">--</span> BPM</div>
+  </div>
+
+  <canvas id="chart" width="600" height="300"></canvas>
+
+  <button onclick="clearSession()">Clear Session</button>
+
+  <script>
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Heart Rate',
+          data: [],
+          borderColor: '#ff0033',
+          backgroundColor: 'rgba(255, 0, 51, 0.2)',
+          pointBackgroundColor: '#ffffff',
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#ffffff' } }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: "Time (s)", color: "#ffffff" },
+            ticks: { color: "#ffffff" },
+            grid: { color: "rgba(0,240,255,0.2)" }
+          },
+          y: {
+            min: 40,
+            max: 200,
+            ticks: { color: "#ffffff" },
+            grid: { color: "rgba(0,240,255,0.2)" }
+          }
+        }
+      }
+    });
+
+    async function fetchData() {
+      let res = await fetch("/update");
+      let data = await res.json();
+
+      document.getElementById("gauge").innerText = data.heartrate === -1 ? "--" : data.heartrate;
+      document.getElementById("status").innerText = data.status;
+      document.getElementById("min").innerText = data.min;
+      document.getElementById("max").innerText = data.max;
+      document.getElementById("avg").innerText = data.avg;
+
+      if (data.heartrate !== -1) {
+        chart.data.labels = data.graph.map(p => p[0]);
+        chart.data.datasets[0].data = data.graph.map(p => p[1]);
+        chart.update();
+      }
+    }
+
+    async function clearSession() {
+      await fetch("/clear", { method: "POST" });
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+      chart.update();
+    }
+
+    setInterval(fetchData, 1000); // Update every second
+  </script>
+</body>
+</html>

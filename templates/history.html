@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient History</title>
+
+    <style>
+        body {
+            background: #020b16;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: rgba(0,15,30,0.8);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px #00eaff;
+        }
+
+        h1 {
+            font-size: 32px;
+            text-shadow: 0 0 20px #00eaff;
+        }
+
+        .card {
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(0,0,30,0.6);
+            border-left: 4px solid #00eaff;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .back-btn {
+            background: #ff4d4d;
+            padding: 10px 22px;
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<a href="/menu" class="back-btn">⬅ Back to Menu</a>
+
+<div class="container">
+
+    <h1>📚 Patient History</h1>
+
+    <div class="card">
+        <h2>💡 PPG Data (Last 20 values)</h2>
+        <p>{{ ppg }}</p>
+    </div>
+
+    <div class="card">
+        <h2>❤️ ECG Data (Last 20 values)</h2>
+        <p>{{ ecg }}</p>
+    </div>
+
+    <div class="card">
+        <h2>💧 Blood Pressure (Last 10 readings)</h2>
+        <p>{{ bp }}</p>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Monitoring - Connection Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(18, 18, 18, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 191, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #00BFFF;
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px rgba(0, 191, 255, 0.5);
+        }
+
+        .section-title {
+            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover {
+            background: rgba(0, 191, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #00BFFF;
+        }
+
+        .radio-option label {
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .connection-frame {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 250px;
+            display: none;
+        }
+
+        .connection-frame.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .form-select,
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 191, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus,
+        .form-input:focus {
+            outline: none;
+            border-color: #00BFFF;
+            box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
+        }
+
+        .form-select option {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: #00BFFF;
+            color: #ffffff;
+            box-shadow: 0 5px 20px rgba(0, 191, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: #1E90FF;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 191, 255, 0.6);
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #1E88E5;
+            transform: translateY(-2px);
+        }
+
+        .btn-test {
+            background: #FF9800;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .btn-test:hover {
+            background: #FB8C00;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-message.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .status-message.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .status-message.warning {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+
+        .connect-button-container {
+            margin-top: 30px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .radio-option {
+                justify-content: center;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">IIT BHU Health Monitoring App</h1>
+
+        <div class="section-title">Select Connection Type:</div>
+
+        <div class="radio-group">
+            <div class="radio-option">
+                <input type="radio" id="serial" name="connection" value="serial" checked>
+                <label for="serial">Serial Port</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="ble" name="connection" value="ble">
+                <label for="ble">Bluetooth (BLE)</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="wifi" name="connection" value="wifi">
+                <label for="wifi">WiFi</label>
+            </div>
+        </div>
+
+        <!-- Serial Configuration Frame -->
+        <div id="serialFrame" class="connection-frame active">
+            <div class="form-group">
+                <label class="form-label">Select COM Port:</label>
+                <select id="comPort" class="form-select">
+                    <option>Loading...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Select Baud Rate:</label>
+                <select id="baudRate" class="form-select">
+                    <option>9600</option>
+                    <option>19200</option>
+                    <option>38400</option>
+                    <option>57600</option>
+                    <option>115200</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- BLE Configuration Frame -->
+        <div id="bleFrame" class="connection-frame">
+            <div class="form-group">
+                <label class="form-label">Select BLE Device:</label>
+                <select id="bleDevice" class="form-select">
+                    <option>No devices scanned</option>
+                </select>
+            </div>
+
+            <button id="scanBtn" class="btn btn-secondary" onclick="scanBLE()">
+                Scan for BLE Devices
+            </button>
+
+            <div id="bleStatus" class="status-message"></div>
+        </div>
+
+        <!-- WiFi Configuration Frame -->
+        <div id="wifiFrame" class="connection-frame">
+            <div class="form-group">
+                <label class="form-label">Enter WiFi Device IP Address:</label>
+                <input type="text" id="wifiIP" class="form-input"
+                       placeholder="e.g., 192.168.137.27" value="192.168.137.27">
+            </div>
+
+            <button id="testBtn" class="btn btn-test" onclick="testWiFi()">
+                Test Connection
+            </button>
+
+            <div id="wifiStatus" class="status-message"></div>
+        </div>
+
+        <!-- Connect Button -->
+        <div class="connect-button-container">
+            <button class="btn btn-primary" onclick="connect()">Connect</button>
+        </div>
+    </div>
+
+    <script>
+        let bleDevices = [];
+        let currentMode = 'serial';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadComPorts();
+            setupRadioListeners();
+        });
+
+        function setupRadioListeners() {
+            document.querySelectorAll('input[name="connection"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    currentMode = this.value;
+                    switchConnectionFrame(this.value);
+                });
+            });
+        }
+
+        function switchConnectionFrame(mode) {
+            // Hide all frames
+            document.querySelectorAll('.connection-frame').forEach(frame => {
+                frame.classList.remove('active');
+            });
+
+            // Show selected frame
+            if (mode === 'serial') {
+                document.getElementById('serialFrame').classList.add('active');
+            } else if (mode === 'ble') {
+                document.getElementById('bleFrame').classList.add('active');
+            } else if (mode === 'wifi') {
+                document.getElementById('wifiFrame').classList.add('active');
+            }
+        }
+
+        function loadComPorts() {
+            fetch('/api/com-ports')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('comPort');
+                    select.innerHTML = '';
+                    data.ports.forEach(port => {
+                        const option = document.createElement('option');
+                        option.value = port;
+                        option.textContent = port;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading COM ports:', error);
+                    document.getElementById('comPort').innerHTML = '<option>Error loading ports</option>';
+                });
+        }
+
+        function scanBLE() {
+            const statusDiv = document.getElementById('bleStatus');
+            const scanBtn = document.getElementById('scanBtn');
+
+            statusDiv.innerHTML = '<span class="loading"></span>Scanning for BLE devices...';
+            statusDiv.className = 'status-message warning';
+            scanBtn.disabled = true;
+            scanBtn.textContent = 'Scanning...';
+
+            fetch('/api/scan-ble', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                scanBtn.disabled = false;
+                scanBtn.textContent = 'Scan for BLE Devices';
+
+                if (data.success && data.devices.length > 0) {
+                    bleDevices = data.devices;
+                    const select = document.getElementById('bleDevice');
+                    select.innerHTML = '';
+
+                    data.devices.forEach(device => {
+                        const option = document.createElement('option');
+                        option.value = device.address;
+                        option.textContent = `${device.name} (${device.address})`;
+                        select.appendChild(option);
+                    });
+
+                    statusDiv.textContent = data.message;
+                    statusDiv.className = 'status-message success';
+                } else {
+                    statusDiv.textContent = data.message || 'No BLE devices found';
+                    statusDiv.className = 'status-message error';
+                }
+            })
+            .catch(error => {
+                scanBtn.disabled = false;
+                scanBtn.textContent = 'Scan for BLE Devices';
+                statusDiv.textContent = 'Error: ' + error.message;
+                statusDiv.className = 'status-message error';
+            });
+        }
+
+        function testWiFi() {
+            const ip = document.getElementById('wifiIP').value.trim();
+            const statusDiv = document.getElementById('wifiStatus');
+            const testBtn = document.getElementById('testBtn');
+
+            if (!ip) {
+                statusDiv.textContent = 'Please enter an IP address';
+                statusDiv.className = 'status-message error';
+                return;
+            }
+
+            statusDiv.innerHTML = '<span class="loading"></span>Testing connection...';
+            statusDiv.className = 'status-message warning';
+            testBtn.disabled = true;
+
+            fetch('/api/test-wifi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ip: ip })
+            })
+            .then(response => response.json())
+            .then(data => {
+                testBtn.disabled = false;
+                statusDiv.textContent = data.message;
+                statusDiv.className = data.success ? 'status-message success' : 'status-message error';
+            })
+            .catch(error => {
+                testBtn.disabled = false;
+                statusDiv.textContent = 'Error: ' + error.message;
+                statusDiv.className = 'status-message error';
+            });
+        }
+
+        function connect() {
+            const config = {
+                mode: currentMode
+            };
+
+            if (currentMode === 'serial') {
+                config.com_port = document.getElementById('comPort').value;
+                config.baud_rate = document.getElementById('baudRate').value;
+            } else if (currentMode === 'ble') {
+                config.ble_address = document.getElementById('bleDevice').value;
+            } else if (currentMode === 'wifi') {
+                config.wifi_ip = document.getElementById('wifiIP').value;
+            }
+
+            // Save configuration
+            fetch('/api/save-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to dashboard
+                    window.location.href = '/menu';
+                }
+            })
+            .catch(error => {
+                console.error('Error saving config:', error);
+                alert('Error connecting: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>

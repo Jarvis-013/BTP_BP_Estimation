@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - IIT BHU Health Monitoring</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(18, 18, 18, 0.9);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,191,255,0.25);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 30px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            color: #00BFFF;
+            text-shadow: 0 0 15px rgba(0,191,255,0.5);
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid rgba(0,191,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: #00BFFF;
+            outline: none;
+            box-shadow: 0 0 12px rgba(0,191,255,0.4);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            background: #00BFFF;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 5px 20px rgba(0,191,255,0.4);
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #1E90FF;
+            transform: translateY(-2px);
+        }
+
+        .switch-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .switch-text a {
+            color: #00BFFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity:0; transform: translateY(10px); }
+            to { opacity:1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="title">Login</h1>
+
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="form-input" type="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input class="form-input" type="password" name="password" required>
+            </div>
+
+            <button class="btn-primary">Login</button>
+        </form>
+
+        <div class="switch-text">
+            Don't have an account?
+            <a href="/signup">Create one</a>
+        </div>
+    </div>
+</body>
+</html>

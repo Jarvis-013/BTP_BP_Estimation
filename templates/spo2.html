@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SpO₂ & Pulse Monitor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #000);
+      color: #e0f2fe;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #00d9ff;
+      text-shadow: 0 0 10px #00d9ff, 0 0 20px #00aaff;
+      margin-top: 20px;
+    }
+
+    .data-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .data-box {
+      background: #0d1117;
+      padding: 20px;
+      border-radius: 15px;
+      min-width: 200px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 195, 255, 0.4);
+    }
+
+    .data-box h2 {
+      margin: 10px 0;
+      font-size: 22px;
+    }
+
+    .critical { color: red; }
+    .normal { color: #4CAF50; }
+    .abnormal { color: yellow; }
+
+    /* Side-by-side chart container */
+    .chart-container {
+      display: flex;
+      width: 100%;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .chart-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+
+    canvas {
+      background: #111827;
+      border: 2px solid #00c3ff;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 195, 255, 0.4);
+      padding: 10px;
+      max-width: 90%;
+      height: auto;
+    }
+
+    .controls {
+      margin: 20px;
+    }
+
+    button {
+      padding: 12px 25px;
+      margin: 5px;
+      border: none;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(0, 195, 255, 0.4);
+    }
+
+    .blue {
+      background: #2196F3;
+      color: white;
+    }
+
+    .green {
+      background: #4CAF50;
+      color: white;
+    }
+
+    @media (max-width: 900px) {
+      .chart-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      canvas {
+        width: 90% !important;
+      }
+    }
+  .back-btn {
+  display: inline-block;
+  margin: 20px auto 0 20px; /* top auto, left aligned */
+  padding: 12px 25px;
+  background: #ff4444;
+  color: white;
+  font-weight: bold;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: 0.3s;
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.6);
+}
+
+.back-btn:hover {
+  background: #ff2222;
+  box-shadow: 0 0 20px #ff4444, 0 0 30px #ff6666;
+}
+
+
+  </style>
+</head>
+<body>
+<a href="/menu" class="back-btn">⬅ Back</a>
+<h1>🩺 SpO₂ & Pulse Monitor</h1>
+
+
+  <div class="data-container">
+    <div class="data-box">
+      <h2>SpO₂: <span id="spo2_val">--</span>% <span id="spo2_icon"></span></h2>
+      <p id="spo2_status">--</p>
+    </div>
+
+    <div class="data-box">
+      <h2>Pulse: <span id="pulse_val">--</span> BPM <span id="pulse_icon"></span></h2>
+      <p id="pulse_status">--</p>
+    </div>
+  </div>
+
+  <p>Session Duration: <span id="duration">00:00</span></p>
+
+  <!-- Charts Side-by-Side -->
+  <div class="chart-container">
+    <div class="chart-wrapper">
+      <canvas id="spo2Chart"></canvas>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="pulseChart"></canvas>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="blue" onclick="togglePause()">⏸ Pause</button>
+    <button class="green" onclick="location.reload()">🔄 Reset</button>
+  </div>
+
+  <script>
+    let paused = false;
+    let spo2Chart = new Chart(document.getElementById("spo2Chart"), {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "SpO₂", data: [], borderColor: "#e74c3c", fill: false, tension: 0.3 }] },
+        options: {
+          responsive: true,
+          animation: false,
+          plugins: { legend: { labels: { color: "#e0f2fe" } } },
+          scales: {
+            x: { ticks: { color: "white" }, grid: { color: "rgba(255,255,255,0.1)" } },
+            y: { ticks: { color: "white" }, grid: { color: "rgba(255,255,255,0.1)" } }
+          }
+        }
+    });
+
+    let pulseChart = new Chart(document.getElementById("pulseChart"), {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "Pulse", data: [], borderColor: "#1abc9c", fill: false, tension: 0.3 }] },
+        options: {
+          responsive: true,
+          animation: false,
+          plugins: { legend: { labels: { color: "#e0f2fe" } } },
+          scales: {
+            x: { ticks: { color: "white" }, grid: { color: "rgba(255,255,255,0.1)" } },
+            y: { ticks: { color: "white" }, grid: { color: "rgba(255,255,255,0.1)" } }
+          }
+        }
+    });
+
+    async function fetchData() {
+        const res = await fetch("/api/spo2-data");
+        const data = await res.json();
+        if (!data || paused) return;
+
+        if (data.spo2 !== null) {
+            document.getElementById("spo2_val").innerText = data.spo2;
+            document.getElementById("spo2_status").innerText = data.spo2_status.status;
+            document.getElementById("spo2_status").className = data.spo2_status.color;
+            document.getElementById("spo2_icon").innerText = data.spo2_status.icon;
+
+            spo2Chart.data.labels.push("");
+            spo2Chart.data.datasets[0].data.push(data.spo2);
+            if (spo2Chart.data.labels.length > 50) {
+                spo2Chart.data.labels.shift();
+                spo2Chart.data.datasets[0].data.shift();
+            }
+            spo2Chart.update();
+        }
+
+        if (data.pulse !== null) {
+            document.getElementById("pulse_val").innerText = data.pulse;
+            document.getElementById("pulse_status").innerText = data.pulse_status.status;
+            document.getElementById("pulse_status").className = data.pulse_status.color;
+            document.getElementById("pulse_icon").innerText = data.pulse_status.icon;
+
+            pulseChart.data.labels.push("");
+            pulseChart.data.datasets[0].data.push(data.pulse);
+            if (pulseChart.data.labels.length > 50) {
+                pulseChart.data.labels.shift();
+                pulseChart.data.datasets[0].data.shift();
+            }
+            pulseChart.update();
+        }
+
+        document.getElementById("duration").innerText = data.duration;
+    }
+
+    async function togglePause() {
+        const res = await fetch("/toggle_pause", {method: "POST"});
+        const result = await res.json();
+        paused = result.paused;
+        document.querySelector("button.blue").innerText = paused ? "▶ Resume" : "⏸ Pause";
+    }
+
+    setInterval(fetchData, 1000);
+  </script>
+</body>
+</html>

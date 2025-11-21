@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PPG Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #000);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #e0f2fe;
+    }
+
+    .ppg-container {
+      background: #0d1117;
+      padding: 30px;
+      border-radius: 20px;
+      margin-top: 40px;
+      box-shadow: 0 0 25px rgba(0, 195, 255, 0.4);
+      text-align: center;
+      max-width: 1000px;
+      width: 90%;
+    }
+
+    /* Glowing Title */
+    h1 {
+      font-size: 32px;
+      color: #00d9ff;
+      text-shadow: 0 0 10px #00d9ff, 0 0 20px #00aaff;
+      margin-bottom: 25px;
+    }
+
+    /* Chart card */
+    canvas {
+      width: 100% !important;
+      height: 400px !important;
+      background: #111827;
+      border: 2px solid #00c3ff;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0, 195, 255, 0.4);
+      padding: 10px;
+    }
+
+    /* Back button */
+    .back-btn {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 12px 25px;
+      background: #ff4444;
+      color: white;
+      font-weight: bold;
+      border-radius: 20px;
+      text-decoration: none;
+      transition: 0.3s;
+      box-shadow: 0 0 12px rgba(255, 68, 68, 0.6);
+    }
+
+    .back-btn:hover {
+      background: #ff2222;
+      box-shadow: 0 0 20px #ff4444, 0 0 30px #ff6666;
+    }
+  </style>
+</head>
+<body>
+  <div class="ppg-container">
+    <h1>📊 Real-time PPG Signals</h1>
+    <canvas id="ppgChart"></canvas>
+    <a class="back-btn" href="/menu">⬅ Back to Menu</a>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('ppgChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: 'IR', data: [], borderColor: '#1abc9c', fill: false, tension: 0.3 },
+          { label: 'Red', data: [], borderColor: '#e74c3c', fill: false, tension: 0.3 },
+          { label: 'Green', data: [], borderColor: '#2ecc71', fill: false, tension: 0.3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: {
+          legend: { labels: { color: "#e0f2fe" } }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'second' },
+            ticks: { color: "white" },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          },
+          y: {
+            ticks: { color: "white" },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          }
+        }
+      }
+    });
+
+    // Fetch data from Flask backend every 200ms
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/ppg-data');
+        const data = await res.json();
+
+        chart.data.labels.push(new Date(data.timestamp));
+        chart.data.datasets[0].data.push(data.ir);
+        chart.data.datasets[1].data.push(data.red);
+        chart.data.datasets[2].data.push(data.green);
+
+        if (chart.data.labels.length > 100) {
+          chart.data.labels.shift();
+          chart.data.datasets.forEach(ds => ds.data.shift());
+        }
+
+        chart.update('none'); // fast refresh
+      } catch (err) {
+        console.error("Error fetching PPG data:", err);
+      }
+    }, 200);
+  </script>
+</body>
+</html>

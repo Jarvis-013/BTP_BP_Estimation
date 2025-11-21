@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Monitoring Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background-color: #0a0a2a;
+            color: #ffffff;
+        }
+
+        body.light {
+            background-color: #f0f4f8;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        body.dark .header h1 {
+            color: #00ffcc;
+        }
+
+        body.light .header h1 {
+            color: #2980b9;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.3s;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        body.dark .btn {
+            background-color: #2980b9;
+            color: #ffffff;
+        }
+
+        body.light .btn {
+            background-color: #2980b9;
+            color: #ffffff;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            border-radius: 10px;
+            padding: 15px;
+            transition: background-color 0.3s;
+        }
+
+        body.dark .card {
+            background-color: #1a2436;
+        }
+
+        body.light .card {
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+        }
+
+        body.dark .card-title {
+            color: #00ffcc;
+            border-color: #00ffcc;
+        }
+
+        body.light .card-title {
+            color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .vital-item {
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        body.dark .vital-item {
+            background-color: #0a0a2a;
+        }
+
+        body.light .vital-item {
+            background-color: #f8f9fa;
+        }
+
+        .vital-label {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .vital-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .vital-unit {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .normal {
+            color: #66b3ff;
+        }
+
+        .warning {
+            color: #ff6666;
+        }
+
+        .sensor-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .temp-list,
+        .gas-grid,
+        .ppg-values {
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        body.dark .temp-list,
+        body.dark .gas-grid,
+        body.dark .ppg-values {
+            background-color: #0a0a2a;
+        }
+
+        body.light .temp-list,
+        body.light .gas-grid,
+        body.light .ppg-values {
+            background-color: #f8f9fa;
+        }
+
+        .sensor-subtitle {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .temp-item,
+        .gas-item,
+        .ppg-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 11px;
+        }
+
+        .gas-grid-inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .ppg-values {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .ppg-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .ppg-label {
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
+
+        .ppg-value {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .graphs-section {
+            grid-column: 1 / -1;
+        }
+
+        .graphs-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .graph-card {
+            position: relative;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .tab {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        body.dark .tab {
+            background-color: #0a0a2a;
+            color: #ffffff;
+        }
+
+        body.light .tab {
+            background-color: #e0e0e0;
+            color: #2c3e50;
+        }
+
+        .tab.active {
+            font-weight: bold;
+        }
+
+        body.dark .tab.active {
+            background-color: #2980b9;
+        }
+
+        body.light .tab.active {
+            background-color: #2980b9;
+            color: #ffffff;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .ppg-controls {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .status-bar {
+            text-align: center;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+
+        body.dark .status-bar {
+            background-color: #0a0a2a;
+            color: #00ffcc;
+        }
+
+        body.light .status-bar {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        @media (max-width: 768px) {
+
+            .content-grid,
+            .graphs-container {
+                grid-template-columns: 1fr;
+            }
+
+            .vitals-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body class="dark">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>HEALTH MONITORING DASHBOARD</h1>
+            <div class="header-buttons">
+
+                <button class="btn" id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
+                <button class="btn" onclick="window.location.href='/menu'">◀ Menu</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-grid">
+            <!-- Vitals Section -->
+            <div class="card">
+                <div class="card-title">VITAL SIGNS</div>
+                <div class="vitals-grid">
+                    <div class="vital-item">
+                        <div class="vital-label">❤️ HR</div>
+                        <div class="vital-value normal" id="hrValue">--</div>
+                        <div class="vital-unit">BPM</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-label">💧 SPO2</div>
+                        <div class="vital-value normal" id="spo2Value">--</div>
+                        <div class="vital-unit">%</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-label">📈 ECG</div>
+                        <div class="vital-value normal" id="ecgValue">--</div>
+                        <div class="vital-unit">mV</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-label">💓 BP</div>
+                        <div class="vital-value normal" id="bpValue">--</div>
+                        <div class="vital-unit">mmHg</div>
+                    </div>
+                </div>
+                <div class="status-bar" id="statusBar">Initialising Sensors...</div>
+            </div>
+
+            <!-- Sensors Section -->
+            <div class="card">
+                <div class="card-title">SENSOR READINGS</div>
+                <div class="sensor-grid">
+                    <div class="temp-list">
+                        <div class="sensor-subtitle">🌡️ TEMPERATURES</div>
+                        <div class="temp-item">
+                            <span>Contact:</span>
+                            <span id="tempContact">--°C</span>
+                        </div>
+                        <div class="temp-item">
+                            <span>Ambient:</span>
+                            <span id="tempAmbient">--°C</span>
+                        </div>
+                        <div class="temp-item">
+                            <span>Object:</span>
+                            <span id="tempObject">--°C</span>
+                        </div>
+                    </div>
+
+                    <div class="gas-grid">
+                        <div class="sensor-subtitle">⚠️ GAS SENSORS</div>
+                        <div class="gas-grid-inner" id="gasGrid">
+                            <!-- Gas values will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="ppg-values">
+                        <div class="ppg-item">
+                            <div class="ppg-label">IR</div>
+                            <div class="ppg-value" id="ppgIR">--</div>
+                        </div>
+                        <div class="ppg-item">
+                            <div class="ppg-label">Red</div>
+                            <div class="ppg-value" id="ppgRed">--</div>
+                        </div>
+                        <div class="ppg-item">
+                            <div class="ppg-label">Green</div>
+                            <div class="ppg-value" id="ppgGreen">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphs Section -->
+        <div class="card graphs-section">
+            <div class="card-title">REAL-TIME MONITORING</div>
+            <div class="graphs-container">
+                <!-- ECG Graph -->
+                <div class="graph-card">
+                    <h3 style="margin-bottom: 10px; font-size: 16px;">ECG</h3>
+                    <div class="chart-container">
+                        <canvas id="ecgChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- PPG Graph -->
+                <div class="graph-card">
+                    <h3 style="margin-bottom: 10px; font-size: 16px;">PPG</h3>
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchPPGTab('ir')">IR</button>
+                        <button class="tab" onclick="switchPPGTab('red')">Red</button>
+                        <button class="tab" onclick="switchPPGTab('green')">Green</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="ppgChart"></canvas>
+                    </div>
+                    <div class="ppg-controls">
+                        <button class="btn control-btn" onclick="autoScale()">Auto Scale</button>
+                        <button class="btn control-btn" onclick="zoomIn()">Zoom +</button>
+                        <button class="btn control-btn" onclick="zoomOut()">Zoom -</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDark = true;
+        let isPaused = false;
+        let isMeasuring = false;
+        let currentPPGChannel = 'ir';
+        let zoomFactor = 1.0;
+        let autoScaleEnabled = true;
+
+        // Chart.js configurations
+        const chartConfig = {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#00ffcc',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: { color: '#2a2a2a' },
+                        ticks: { color: '#ffffff' }
+                    },
+                    y: {
+                        display: true,
+                        grid: { color: '#2a2a2a' },
+                        ticks: { color: '#ffffff' }
+                    }
+                }
+            }
+        };
+
+        const ecgChart = new Chart(document.getElementById('ecgChart'), JSON.parse(JSON.stringify(chartConfig)));
+        const ppgChart = new Chart(document.getElementById('ppgChart'), JSON.parse(JSON.stringify(chartConfig)));
+        ppgChart.data.datasets[0].borderColor = '#ff6666';
+
+        function toggleTheme() {
+            isDark = !isDark;
+            document.body.className = isDark ? 'dark' : 'light';
+            document.getElementById('themeBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+
+            // Update chart colors
+            const gridColor = isDark ? '#2a2a2a' : '#e0e0e0';
+            const textColor = isDark ? '#ffffff' : '#2c3e50';
+
+            [ecgChart, ppgChart].forEach(chart => {
+                chart.options.scales.x.grid.color = gridColor;
+                chart.options.scales.y.grid.color = gridColor;
+                chart.options.scales.x.ticks.color = textColor;
+                chart.options.scales.y.ticks.color = textColor;
+                chart.update();
+            });
+
+            ecgChart.data.datasets[0].borderColor = isDark ? '#00ffcc' : '#2980b9';
+            updatePPGColor();
+            ecgChart.update();
+            ppgChart.update();
+        }
+
+        function updatePPGColor() {
+            const colors = {
+                'ir': '#ff6666',
+                'red': '#66b3ff',
+                'green': '#2ecc71'
+            };
+            ppgChart.data.datasets[0].borderColor = colors[currentPPGChannel];
+        }
+
+        function switchPPGTab(channel) {
+            currentPPGChannel = channel;
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            updatePPGColor();
+            ppgChart.update();
+        }
+
+        function startMeasure() {
+            if (isMeasuring) return;
+
+            fetch('/api/start_measurement', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    isMeasuring = true;
+                    document.getElementById('statusBar').textContent = "Initializing Sensor...";
+                    document.getElementById('statusBar').style.color = isDark ? '#ffcc00' : '#f57f17';
+                })
+                .catch(error => console.error('Error starting measurement:', error));
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const globalBtn = document.getElementById('globalPauseBtn');
+            const ppgBtn = document.getElementById('pauseBtn');
+
+            const text = isPaused ? '▶ Resume' : '⏸️ Pause';
+            if (globalBtn) globalBtn.textContent = text;
+            if (ppgBtn) ppgBtn.textContent = isPaused ? 'Resume' : 'Pause';
+        }
+
+        function autoScale() {
+            autoScaleEnabled = true;
+            zoomFactor = 1.0;
+        }
+
+        function zoomIn() {
+            autoScaleEnabled = false;
+            zoomFactor *= 0.8;
+        }
+
+        function zoomOut() {
+            autoScaleEnabled = false;
+            zoomFactor *= 1.2;
+        }
+
+        function updateData() {
+            // Always fetch data to check for admin commands
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    // Check for admin action
+                    if (data.admin_action) {
+                        if (data.admin_action === 'start') {
+                            isMeasuring = true;
+                            isPaused = false;
+                        } else if (data.admin_action === 'stop') {
+                            isMeasuring = false;
+                            isPaused = false;
+                        } else if (data.admin_action === 'pause') {
+                            isPaused = true;
+                        } else if (data.admin_action === 'resume') {
+                            isPaused = false;
+                        }
+                    }
+
+                    if (data.status === 'waiting') {
+                        // Not measuring yet
+                        if (!isMeasuring) {
+                            const statusBar = document.getElementById('statusBar');
+                            statusBar.textContent = "Initialising Sensors...";
+                            statusBar.style.color = '#6c757d';
+                        }
+                        return;
+                    }
+
+                    if (!isMeasuring) return;
+
+                    // Measurement active
+                    const statusBar = document.getElementById('statusBar');
+                    if (statusBar.textContent === "Initializing Sensor..." || statusBar.textContent === "Initialising Sensors...") {
+                        statusBar.textContent = "Monitoring Active";
+                        statusBar.style.color = isDark ? '#00ffcc' : '#2e7d32';
+                    }
+
+                    // Update vitals
+                    updateVital('hrValue', data.heartrate, data.heartrate < 60 || data.heartrate > 100);
+                    updateVital('spo2Value', data.spo2, data.spo2 < 95);
+                    updateVital('ecgValue', data.ecg.toFixed(2), Math.abs(data.ecg) > 1.5);
+                    updateVital('bpValue', data.bp, false);
+
+                    // Update temperatures
+                    document.getElementById('tempContact').textContent = data.temperatures[0].toFixed(1) + '°C';
+                    document.getElementById('tempAmbient').textContent = data.temperatures[1].toFixed(1) + '°C';
+                    document.getElementById('tempObject').textContent = data.temperatures[2].toFixed(1) + '°C';
+
+                    // Update gas sensors
+                    const gases = ['CO', 'CH4', 'C2H5OH', 'H2', 'NH3', 'NO2'];
+                    const gasGrid = document.getElementById('gasGrid');
+                    gasGrid.innerHTML = '';
+                    data.gas.forEach((value, i) => {
+                        const item = document.createElement('div');
+                        item.className = 'gas-item';
+                        item.innerHTML = `<span>${gases[i]}</span><span>${typeof value === 'number' ? value.toFixed(1) : value}</span>`;
+                        gasGrid.appendChild(item);
+                    });
+
+                    // Update PPG values
+                    document.getElementById('ppgIR').textContent = data.ppg[0];
+                    document.getElementById('ppgRed').textContent = data.ppg[1];
+                    document.getElementById('ppgGreen').textContent = data.ppg[2];
+
+                    // Update ECG chart
+                    if (!isPaused) {
+                        updateChart(ecgChart, data.ecg_buffer);
+                    }
+
+                    // Update PPG chart
+                    if (!isPaused) {
+                        updateChart(ppgChart, data.ppg_buffers[currentPPGChannel], autoScaleEnabled, zoomFactor);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function updateVital(id, value, isWarning) {
+            const element = document.getElementById(id);
+            element.textContent = value;
+            element.className = 'vital-value ' + (isWarning ? 'warning' : 'normal');
+        }
+
+        function updateChart(chart, data, autoScale = true, zoom = 1.0) {
+            chart.data.labels = data.map((_, i) => i);
+            chart.data.datasets[0].data = data;
+
+            if (autoScale) {
+                const min = Math.min(...data);
+                const max = Math.max(...data);
+                const padding = (max - min) * 0.2 || 0.1;
+                chart.options.scales.y.min = min - padding;
+                chart.options.scales.y.max = max + padding;
+            } else {
+                const min = Math.min(...data);
+                const max = Math.max(...data);
+                const range = (max - min) * zoom;
+                const center = (min + max) / 2;
+                chart.options.scales.y.min = center - range / 2;
+                chart.options.scales.y.max = center + range / 2;
+            }
+
+            chart.update();
+        }
+
+        // Update data every 100ms for smoother animation
+        setInterval(updateData, 100);
+    </script>
+</body>
+
+</html>
