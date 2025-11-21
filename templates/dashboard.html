@@ -349,22 +349,22 @@
                 <div class="card-title">VITAL SIGNS</div>
                 <div class="vitals-grid">
                     <div class="vital-item">
-                        <div class="vital-label">❤️ HR</div>
-                        <div class="vital-value normal" id="hrValue">--</div>
+                        <div class="vital-label">HR</div>
+                        <div class="vital-value normal" id="hrValue">NA</div>
                         <div class="vital-unit">BPM</div>
                     </div>
                     <div class="vital-item">
-                        <div class="vital-label">💧 SPO2</div>
-                        <div class="vital-value normal" id="spo2Value">--</div>
+                        <div class="vital-label">SPO2</div>
+                        <div class="vital-value normal" id="spo2Value">NA</div>
                         <div class="vital-unit">%</div>
                     </div>
                     <div class="vital-item">
-                        <div class="vital-label">📈 ECG</div>
-                        <div class="vital-value normal" id="ecgValue">--</div>
+                        <div class="vital-label">ECG</div>
+                        <div class="vital-value normal" id="ecgValue">NA</div>
                         <div class="vital-unit">mV</div>
                     </div>
                     <div class="vital-item">
-                        <div class="vital-label">💓 BP</div>
+                        <div class="vital-label">BP</div>
                         <div class="vital-value normal" id="bpValue">--</div>
                         <div class="vital-unit">mmHg</div>
                     </div>
@@ -377,23 +377,23 @@
                 <div class="card-title">SENSOR READINGS</div>
                 <div class="sensor-grid">
                     <div class="temp-list">
-                        <div class="sensor-subtitle">🌡️ TEMPERATURES</div>
+                        <div class="sensor-subtitle"> TEMPERATURES</div>
                         <div class="temp-item">
                             <span>Contact:</span>
-                            <span id="tempContact">--°C</span>
+                            <span id="tempContact">NULL</span>
                         </div>
                         <div class="temp-item">
                             <span>Ambient:</span>
-                            <span id="tempAmbient">--°C</span>
+                            <span id="tempAmbient">NULL</span>
                         </div>
                         <div class="temp-item">
                             <span>Object:</span>
-                            <span id="tempObject">--°C</span>
+                            <span id="tempObject">NULL</span>
                         </div>
                     </div>
 
                     <div class="gas-grid">
-                        <div class="sensor-subtitle">⚠️ GAS SENSORS</div>
+                        <div class="sensor-subtitle">GAS SENSORS</div>
                         <div class="gas-grid-inner" id="gasGrid">
                             <!-- Gas values will be inserted here -->
                         </div>
@@ -615,25 +615,30 @@
                         statusBar.style.color = isDark ? '#00ffcc' : '#2e7d32';
                     }
 
-                    // Update vitals
-                    updateVital('hrValue', data.heartrate, data.heartrate < 60 || data.heartrate > 100);
-                    updateVital('spo2Value', data.spo2, data.spo2 < 95);
-                    updateVital('ecgValue', data.ecg.toFixed(2), Math.abs(data.ecg) > 1.5);
+                    // Update vitals - Only BP is shown, others are NA
+                    // updateVital('hrValue', data.heart_rate, data.heart_rate < 60 || data.heart_rate > 100);
+                    // updateVital('spo2Value', data.spo2, data.spo2 < 95);
+                    // updateVital('ecgValue', data.ecg.toFixed(2), Math.abs(data.ecg) > 1.5);
+
+                    document.getElementById('hrValue').textContent = "NA";
+                    document.getElementById('spo2Value').textContent = "NA";
+                    document.getElementById('ecgValue').textContent = "NA";
+
                     updateVital('bpValue', data.bp, false);
 
-                    // Update temperatures
-                    document.getElementById('tempContact').textContent = data.temperatures[0].toFixed(1) + '°C';
-                    document.getElementById('tempAmbient').textContent = data.temperatures[1].toFixed(1) + '°C';
-                    document.getElementById('tempObject').textContent = data.temperatures[2].toFixed(1) + '°C';
+                    // Update temperatures (Force NULL)
+                    document.getElementById('tempContact').textContent = "NULL";
+                    document.getElementById('tempAmbient').textContent = "NULL";
+                    document.getElementById('tempObject').textContent = "NULL";
 
                     // Update gas sensors
                     const gases = ['CO', 'CH4', 'C2H5OH', 'H2', 'NH3', 'NO2'];
                     const gasGrid = document.getElementById('gasGrid');
                     gasGrid.innerHTML = '';
-                    data.gas.forEach((value, i) => {
+                    gases.forEach((gas) => {
                         const item = document.createElement('div');
                         item.className = 'gas-item';
-                        item.innerHTML = `<span>${gases[i]}</span><span>${typeof value === 'number' ? value.toFixed(1) : value}</span>`;
+                        item.innerHTML = `<span>${gas}</span><span>NULL</span>`;
                         gasGrid.appendChild(item);
                     });
 
